@@ -12,7 +12,7 @@ This project was developed using [Java 8](https://www.java.com/en/download/) and
 
 ### Installing
 
-The necessary Java source files are **IntensityReader.java** and **Main.java**. If you do not download the entire Eclipse project, remove the following line from the top of both files:
+The necessary Java source files are **IntensityReader.java** and **Main.java**. To use them without downloading the entire .zip file associated with the repository, you could just copy-paste their contents into empty text files on your computer with the same names. If you do not keep the entire Eclipse project, remove the following line from the top of both files:
 
 ```
 package src;
@@ -20,7 +20,7 @@ package src;
 
 **Main.java** uses the program arguments as a list of files to run through IntensityReader. To read more about this, see the [documentation](https://github.com/LiquidsShadow/Intensity_Project/blob/master/src/src/Main.java) in **Main.java**.
 
-If you are not using Eclipse or another IDE and are on Windows, download **runner.bat** to run the program for you on a set of files of your selection. To add input files, add their full path names separated by spaces after the word "Main". For example, if I wish to run the program on test1.jpg, test2.jpg, and test3.jpg that all resided in the folder "C:\\Users\\Chami\\TestImages\\", line 4 would look like:
+If you are not using Eclipse or another IDE and are on Windows, save (or copy) **runner.bat** to run the program for you on a set of files of your selection. To add input files, add their full path names separated by spaces after the word "Main". For example, if I wish to run the program on test1.jpg, test2.jpg, and test3.jpg that all resided in the folder "C:\\Users\\Chami\\TestImages\\", line 4 would look like:
 
 ```
 java Main C:\\Users\\Chami\\TestImages\\test1.jpg C:\\Users\\Chami\\TestImages\\test2.jpg C:\\Users\\Chami\\TestImages\\test3.jpg
