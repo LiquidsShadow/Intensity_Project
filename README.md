@@ -8,7 +8,7 @@ There are a few initial steps to get this program running.
 
 ### Prerequisites
 
-This project was developed using [Java 8](https://www.java.com/en/download/) and [JDK version 1.8.0_201](https://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html). These are needed in order to run the Java source files through the Java Virtual Machine meant for your operating system. Lastly, you have to make sure that the JDK folder has been added to the system path, especially if you are not using an IDE. [UPDATE LINK](https://github.com/LiquidsShadow/Intensity_Project/blob/master/src/src/Main.java) does this for you, but some IDEs may not. For more on this, go [UPDATE LINK](https://github.com/LiquidsShadow/Intensity_Project/blob/master/src/src/Main.java).
+This project was developed using [Java 8](https://www.java.com/en/download/) and [JDK version 1.8.0_201](https://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html). These are needed in order to run the Java source files through the Java Virtual Machine meant for your operating system. Lastly, you have to make sure that the JDK folder has been added to the system path, especially if you are not using an IDE. [Eclipse](https://www.eclipse.org/downloads/) does this for you, but some IDEs may not. I do not know how this is done on OSX, but for windows, this [article](https://stackoverflow.com/questions/1678520/javac-not-working-in-windows-command-prompt) was quite useful.
 
 ### Installing
 
@@ -45,4 +45,4 @@ I included some .jpg files that I used in testing. More can be made using Micros
 ## Acknowledgments
 
 * [PurpleBooth](https://github.com/PurpleBooth) who wrote the [template](https://gist.github.com/PurpleBooth/109311bb0361f32d87a2) for this file.
-* [UPDATE LINK](https://github.com/LiquidsShadow/Intensity_Project/blob/master/src/src/Main.java) was used to develop this project. The Eclipse debugger is very useful for seeing individual pixel values!
+* [Eclipse](https://www.eclipse.org/downloads/) was used to develop this project. The Eclipse debugger is very useful for seeing individual pixel values!
