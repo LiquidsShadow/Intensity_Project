@@ -1,5 +1,7 @@
 package src;
 
+import java.io.File;
+
 /**
  * This class runs the program. The command line arguments are a set of .jpg files to be run through by
  * an IntensityReader. The IntensityReader will read them, calculate a region of interest, and log the
@@ -17,7 +19,7 @@ public class Main {
 		IntensityReader rdr = new IntensityReader();
 		for (String arg : args) {
 			if (arg.endsWith(".jpg") || arg.endsWith(".jpeg")) {
-				rdr.read(arg);
+				rdr.read(new File(arg));
 				rdr.calculateRegionOfInterest();
 				rdr.writeRegionOfInterestToCSV(arg.substring(0, arg.indexOf(".jpg")) + ".csv");
 			}

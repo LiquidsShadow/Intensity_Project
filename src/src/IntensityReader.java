@@ -28,11 +28,11 @@ public class IntensityReader {
 	
 	/**
 	 * Using BufferedImage, populate the intensities array for a given .jpg file.  
-	 * @param filename - a .jpg file
+	 * @param file - a .jpg file
 	 */
-	public void read(String filename) {
+	public void read(File file) {
 		try {
-			BufferedImage img = ImageIO.read(new File(filename));
+			BufferedImage img = ImageIO.read(file);
 			intensityArray = new int[img.getHeight()][img.getWidth()];			
 			for (int i = 0; i < intensityArray.length; i++) {
 				for (int j = 0; j < intensityArray[0].length; j++) {
@@ -42,7 +42,7 @@ public class IntensityReader {
 			}
 		}
 		catch (IOException e) {
-			System.out.println("Error opening file! " + e.getMessage());
+			System.out.println("Error opening " + file.getName() + "! " + e.getMessage());
 		}
 	}
 	
