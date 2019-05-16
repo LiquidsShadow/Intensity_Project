@@ -8,46 +8,36 @@ import javax.imageio.ImageIO;
 /**
  * Class represents an Intensity Reader - that is, given a JPEG file can provide a 2D array of intensities
  * (a pixel's intensity is the sum of the pixel's RGB values) as well as a "region of interest" that is 
- * the sums of a specified percentage of rows for each column. Furthermore, this information can be written
+ * the sums of a specified number of rows for each column. Furthermore, this information can be written
  * to CSV files of the user's choosing.  
  * @author Chami
  */
 
 public class IntensityReader {
 	
-	// if the user doesn't specify a top and bottom these can be used in place.
-	private static double DEFAULT_TOP = 0.4; 
-	private static double DEFAULT_BOTTOM = 0.6;
 	// default output CSV filenames
 	private static String DEFAULT_ROI_NAME = "region_of_interest.csv";
 	private static String DEFAULT_INTENSITY_NAME = "intensity_array.csv";
 	
 	private int[][] intensityArray; // holds the intensities of each pixel in the image 
-	private int[] regionOfInterest; // holds the sums of a specified percentage of the rows for each column
-	private double topPercent; // top percent of the region of interest 
-	private double btmPercent; // bottom percent of the region of interest
+	private int[] regionOfInterest; // holds the sums of a specified number of rows for each column
+	// number of rows that span the region of interest. This remains the same for the object's lifetime
+	// regardless of how many files are passed through it.
+	private int numRows; 
 	
 	/**
-	 * Constructs an empty IntensityReader with a specified top and bottom percentages. Use read() to initialize the data.
-	 * @param topPercent - top percent of region of interest
-	 * @param btmPercent - bottom percent of region of interest
-	 * @throws IllegalArgumentException - (i) percents do not lie on [0, 1] or (ii) btmPercent < topPercent
+	 * Constructs an empty IntensityReader with a specified region of interest row size. 
+	 * Use read() to initialize the data.
+	 * @param numRows - row size of region of interest
+	 * @throws IllegalArgumentException - if numRows < 0
 	 */
-	public IntensityReader(double topPercent, double btmPercent) {
-		if (topPercent < 0 || topPercent > 1 || btmPercent < 0 || btmPercent > 1 || btmPercent < topPercent) {
-			throw new IllegalArgumentException("Percentages are invalid (top: " + topPercent + ", bottom: " + btmPercent + "). They must lie in [0, 1] and top percent must be less than or equal to the bottom percent.");
+	public IntensityReader(int numRows) {
+		if (numRows < 0) {
+			throw new IllegalArgumentException("Number of rows (" + numRows + ") must be a nonnegative integer!");
 		}
 		intensityArray = null;
 		regionOfInterest = null;
-		this.topPercent = topPercent;
-		this.btmPercent = btmPercent;
-	}
-	
-	/**
-	 * Default Constructor: Constructs an empty IntensityReader. Use read() to initialize the data. 
-	 */
-	public IntensityReader() {
-		this(DEFAULT_TOP, DEFAULT_BOTTOM);
+		this.numRows = numRows;
 	}
 		
 	/**
@@ -106,16 +96,52 @@ public class IntensityReader {
 	}
 	
 	/**
-	 * Calculates the region of interest sums of the row starting from a top percent to a bottom percent
-	 * as long as the intensity array has been populated.
-	 * @throws IllegalArgumentException when intensities array is not populated 
+	 * Calculates the region of interest sums as long as the intensity array has been populated and the 
+	 * row size of the region of interest is acceptable.
+	 * @throws IllegalArgumentException when intensities array is not populated or number of rows in the ROI
+	 * is less than the number of rows in the image's array.
 	 */
 	public void calculateRegionOfInterest() {
 		if (intensityArray == null) {
 			throw new IllegalArgumentException("Please initialize the intensities array first using \"read()\"!");
 		}
-		int topRow = (int)(Math.floor(intensityArray.length*topPercent));
-		int bottomRow = (int)(Math.ceil(intensityArray.length*btmPercent));
+		if (numRows > intensityArray.length) {
+			throw new IllegalArgumentException("The specified number of rows (" +  numRows + ") in the region of interest is too large. ");
+		}
+		/*
+		 * Since I condensed the original algorithm, I have added a pseudocode version below with a small trace.
+		 * 
+		 * Let h = intensityArray.length, t = top row, b = bottom row, r = number of rows
+		 * t <- 0
+		 * b <- 0
+		 * if h is even then
+		 * 		t <- floor(h/2) - floor(r/2)		(*)
+		 *		b <- floor(h/2) + floor(r/2) - 1 	(*)	(~)
+		 * {suppose h=8, r=4. Then t=4-2=2 and b=4+2-1=5. These are the correct bounds when r is even}
+		 * 		if r is odd then					(~)
+		 * 			t <- t - 1
+		 * {suppose h=8, r=5. Then t=2 to b=5 is wrong because 5 rows aren't spanned. By default, say the extra row is on top, which means t becomes 2-1 so t to b span 5 rows}
+		 * 
+		 * if h is odd then
+		 * 		t <- floor(h/2) - floor(r/2)		(*)
+		 * 		b <- floor(h/2) + floor(r/2)		(*)
+		 * {suppose h=7, r=5. Then t=3-2=1 and b=3+2=5. These are correct bounds when r is odd}
+		 * 		if r is even then					(~)
+		 * 			b <- b - 1
+		 * {suppose h=7, r=6. Then t=3-3=0 and b=3+3=6. These bounds are too big as 7 rows are spanned not 6. To account for this, keep the extra row on top and decrease the bottom row.}
+		 *
+		 * The following lines are just a condensed version of this algorithm. Note that the lines marked (*) are very similar
+		 * and can be used to initialize top, bottom at the start (instead of 0) and that there are explicit cases when top and
+		 * bottom are edited after initialization which I have marked by (~).
+		 */
+		int topRow = intensityArray.length/2 - numRows/2;
+		int bottomRow = intensityArray.length/2 + numRows/2;
+		if (intensityArray.length % 2 == 0 || (intensityArray.length % 2 != 0 && numRows % 2 == 0)) {
+			bottomRow--;
+		}
+		if (intensityArray.length % 2 == 0 && numRows % 2 != 0) {
+			topRow--;
+		}
 		regionOfInterest = new int[intensityArray[0].length];
 		for (int j = 0; j < regionOfInterest.length; j++) {
 			for (int i = topRow; i <= bottomRow; i++) {
@@ -159,20 +185,39 @@ public class IntensityReader {
 	public void writeRegionOfInterestToCSV() throws FileNotFoundException {
 		writeRegionOfInterestToCSV(DEFAULT_ROI_NAME);
 	}
-	
+
 	/**
-	 * Gets the top percentage of the region of interest
-	 * @return top percent of ROI
+	 * Gets the size of the region of interest in number of rows.
+	 * @return ROI size in rows.
 	 */
-	public double getTopPercent() {
-		return topPercent;
+	public int getNumRows() {
+		return numRows;
 	}
 	
 	/**
-	 * Gets the bottom percentage of the region of interest
-	 * @return btm. percent of ROI
+	 * Runs an experiment on a set of JPEG files through a provided IntensityReader. In the even of errors
+	 * occurring, the method reports to the user through a specified ErrorDisplay object.
+	 * @param files - set of JPEG input files
+	 * @param err - ErrorDisplay object
+	 * @param rdr - an IntensityReader
 	 */
-	public double getBtmPercent() {
-		return btmPercent;
+	public static void runExperiment(File[] files, ErrorDisplay err, IntensityReader rdr) {
+		for (File f : files) {
+			try {
+				rdr.read(f);
+				rdr.calculateRegionOfInterest();
+				int split = f.getAbsolutePath().indexOf(".jpg");
+				if (split < 0) {
+					split = f.getAbsolutePath().indexOf(".jpeg");
+				}
+				rdr.writeRegionOfInterestToCSV(f.getAbsolutePath().substring(0, split) + ".csv");
+			}
+			catch (FileNotFoundException e) {
+				err.displayError("File Writing Error", "Could not write to file: " + e.getMessage());
+			}
+			catch (IOException e) {
+				err.displayError("File Reading Error", "Could not read file \"" + f.getName() + "\": " + e.getMessage());
+			}
+		}
 	}
 }

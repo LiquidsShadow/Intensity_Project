@@ -8,47 +8,44 @@ import javax.swing.filechooser.FileNameExtensionFilter;
  * This file provides a GUI variant of Main.java. This class provides a dialog box to select the set of 
  * JPEG files to run through IntensityReader. The IntensityReader will read them, calculate a region of 
  * interest, and log the region of interest in a CSV file. The class uses the program arguments to specify
- * the top and bottom percentages of the image (represented as an array) that will be the bounds of the
- * region of interest.
+ * the number of rows in the region of interest. 
  * @author Chami
  */
-public class Display {
+public final class Display {
 	
 	/**
 	 * Main method - runs the program.
-	 * @param args - program arguments, these hold the top and bottom percentages for the region of interest
-	 * calculated by IntensityReader (see this file's documentation for more). They are read top first then
-	 * bottom, and must be of the double variable type. 
+	 * @param args - program arguments, these hold 1 entry, the number of rows in the region of interest to
+	 * be calculated by IntensityReader (see this file's documentation for more).
 	 */
 	public static void main(String[] args) {
+		ErrorDisplay err = new ErrorDisplay(ErrorDisplay.OutputType.GUI);
 		// load system look and feel if possible.
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException
 				| UnsupportedLookAndFeelException e) {
-			JOptionPane.showMessageDialog(null, "There was an error loading the system's look and feel. Using Java look and feel instead.", "Error!", JOptionPane.ERROR_MESSAGE);
+			err.displayError("Look and Feel Error", "Could not load system look and feel. Using Java look and feel instead.");
 		}
 		// construct IntensityReader by parsing program arguments
 		IntensityReader rdr = null; 
-		if (args.length == 2) {
+		if (args.length == 1) {
 			try {
-				rdr = new IntensityReader(Double.parseDouble(args[0]), Double.parseDouble(args[1]));
+				rdr = new IntensityReader(Integer.parseInt(args[0]));
 			}
 			catch (NumberFormatException e) {
-				JOptionPane.showMessageDialog(null, "Invalid program argument inputs (" + args[0] + ", " + args[1] +"). The arguments must be valid double values.\nUsing default top and bottom percentages instead.", "Error!", JOptionPane.ERROR_MESSAGE);
-				rdr = new IntensityReader();
+				err.displayError("Program Argument(s) Error", "\"Invalid program argument(s) (" + args[0] + ", " + args[1] + "). The argument must be an integer value.");
 			}
 			catch (IllegalArgumentException e) {
-				JOptionPane.showMessageDialog(null, e.getMessage() + "\nUsing default top and bottom percentages instead.", "Error!", JOptionPane.ERROR_MESSAGE);
-				rdr = new IntensityReader();
+				err.displayError("Intensity Reader Error", e.getMessage());
 			}
 		}
-		else if (args.length > 0) {
-			JOptionPane.showMessageDialog(null, "Invalid program argument length (" + args.length + ").\nUsing default top and bottom percentages instead.", "Error!", JOptionPane.ERROR_MESSAGE);
-			rdr = new IntensityReader();
-		}
 		else {
-			rdr = new IntensityReader();
+			err.displayError("Program Argument Length Error", "Invalid program argument length.");
+		}
+		// program set-up failed; exit the program.
+		if (rdr == null) {
+			return;
 		}
 		// set-up and open file selection dialog for user to choose input files
 		JFileChooser chooser = new JFileChooser();
@@ -59,27 +56,10 @@ public class Display {
 		int choice = chooser.showOpenDialog(null);
 		if (choice == JFileChooser.APPROVE_OPTION) {
 			// run input files through IntensityReader 
-			File[] files = chooser.getSelectedFiles();
-			for (File f : files) {
-				try {
-					rdr.read(f);
-					rdr.calculateRegionOfInterest();
-					int split = f.getAbsolutePath().indexOf(".jpg");
-					if (split < 0) {
-						split = f.getAbsolutePath().indexOf(".jpeg");
-					}
-					rdr.writeRegionOfInterestToCSV(f.getAbsolutePath().substring(0, split) + ".csv");
-				}
-				catch (FileNotFoundException e) {
-					JOptionPane.showMessageDialog(null, "Could not write to file: " + e.getMessage(), "Error!", JOptionPane.ERROR_MESSAGE);
-				}
-				catch (IOException e) {
-					JOptionPane.showMessageDialog(null, "Could not read file \"" + f.getName() + "\": " + e.getMessage(), "Error!", JOptionPane.ERROR_MESSAGE);
-				}
-			}
+			IntensityReader.runExperiment(chooser.getSelectedFiles(), err, rdr);
 		}
 		else if (choice == JFileChooser.ERROR_OPTION) {
-			JOptionPane.showMessageDialog(null, "There was an error selecting files.", "Error!", JOptionPane.ERROR_MESSAGE);
+			err.displayError("File Selection Error", "There was an error selecting files.");
 		}
 		// else { user has cancelled - do nothing } 
 	}
